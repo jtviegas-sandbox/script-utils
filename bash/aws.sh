@@ -229,34 +229,27 @@ createBucket()
 
 createFolderInBucket()
 {
-    goin "createFolderInBucket" "$1 $2"
+    goin "createFolderInBucket" "$1 $2 $3"
     local __bucketName=$1
     local __folderName=$2
-    
     local __aws_url=$3
     local _aws_url_option=""
     if [[ ! -z "$__aws_url" ]]; then
         _aws_url_option="--endpoint-url=$__aws_url"
     fi
 
-    aws $_aws_url_option s3  ls test | grep aws.sh2
-
-    aws $_aws_url_option s3api put-object --bucket ${__bucketName} --key ${__folderName}
-    __r=$?
-    if [[ ! "$__r" -eq "0" ]] ; then cd ${_pwd} && exit 1; fi
-    
-    
-    aws $_aws_url_option s3 ls | grep $__bucket
+    aws $_aws_url_option s3  ls $__bucketName | grep $__folderName
     local __r=$?
     if [[ "$__r" -eq "0" ]]
     then
-        warn "found bucket $__bucket already created"
+        warn "found $__folderName already created in bucket $__bucketName"
         __r=0
     else
-        aws $_aws_url_option s3 mb $__bucket
+        aws $_aws_url_option s3api put-object --bucket $__bucketName --key $__folderName
         __r=$?
-        if [[ ! "$__r" -eq "0" ]] ; then warn "could not create bucket $__bucket"; else info "created bucket $__bucket" ; fi
+        if [[ ! "$__r" -eq "0" ]] ; then warn "could not create folder $__folderName in bucket $__bucketName"; else info "created folder $__folderName in bucket $__bucketName" ; fi
     fi
+
     goout "createFolderInBucket" "$__r"
     return $__r
 }
