@@ -53,6 +53,12 @@ stat()
 {
     goin "stat"
     
+    local __aws_url=$1
+    local _aws_url_option=""
+    if [[ ! -z "$__aws_url" ]]; then
+        _aws_url_option="--endpoint-url=$__aws_url"
+    fi
+    
     info "current buckets:"
     aws s3 ls
     info "current tables:"
@@ -194,17 +200,25 @@ createTable()
 
 createBucket()
 {
-    goin "createBucket" $1
+    goin "createBucket" "$1 $2"
     local __bucketName=$1
+    
     __bucket="s3://$__bucketName"
-    aws s3 ls | grep $__bucket
+    
+    local __aws_url=$2
+    local _aws_url_option=""
+    if [[ ! -z "$__aws_url" ]]; then
+        _aws_url_option="--endpoint-url=$__aws_url"
+    fi
+
+    aws $_aws_url_option s3 ls | grep $__bucket
     local __r=$?
     if [[ "$__r" -eq "0" ]]
     then
         warn "found bucket $__bucket already created"
         __r=0
     else
-        aws s3 mb $__bucket
+        aws $_aws_url_option s3 mb $__bucket
         __r=$?
         if [[ ! "$__r" -eq "0" ]] ; then warn "could not create bucket $__bucket"; else info "created bucket $__bucket" ; fi
     fi
@@ -213,18 +227,59 @@ createBucket()
 }
 
 
+createFolderInBucket()
+{
+    goin "createFolderInBucket" "$1 $2"
+    local __bucketName=$1
+    local __folderName=$2
+    
+    local __aws_url=$3
+    local _aws_url_option=""
+    if [[ ! -z "$__aws_url" ]]; then
+        _aws_url_option="--endpoint-url=$__aws_url"
+    fi
+
+    aws $_aws_url_option s3  ls test | grep aws.sh2
+
+    aws $_aws_url_option s3api put-object --bucket ${__bucketName} --key ${__folderName}
+    __r=$?
+    if [[ ! "$__r" -eq "0" ]] ; then cd ${_pwd} && exit 1; fi
+    
+    
+    aws $_aws_url_option s3 ls | grep $__bucket
+    local __r=$?
+    if [[ "$__r" -eq "0" ]]
+    then
+        warn "found bucket $__bucket already created"
+        __r=0
+    else
+        aws $_aws_url_option s3 mb $__bucket
+        __r=$?
+        if [[ ! "$__r" -eq "0" ]] ; then warn "could not create bucket $__bucket"; else info "created bucket $__bucket" ; fi
+    fi
+    goout "createFolderInBucket" "$__r"
+    return $__r
+}
+
 deleteBucket()
 {
     goin "deleteBucket" $1
     local __bucketName=$1
     __bucket="s3://$__bucketName"
-    aws s3 ls | grep $__bucketName
+    
+    local __aws_url=$2
+    local _aws_url_option=""
+    if [[ ! -z "$__aws_url" ]]; then
+        _aws_url_option="--endpoint-url=$__aws_url"
+    fi
+    
+    aws $_aws_url_option s3 ls | grep $__bucketName
     local __r=$?
     if [[ "$__r" -ne "0" ]]; then
         warn "couldn't find bucket $__bucket, not there"
         __r=0
     else
-        aws s3 rb $__bucket --force
+        aws $_aws_url_option s3 rb $__bucket --force
         __r=$?
         if [[ ! "$__r" -eq "0" ]] ; then warn "! could not delete bucket $__bucket !"; else info "deleted bucket $__bucket" ; fi
     fi
