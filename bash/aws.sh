@@ -34,7 +34,7 @@ err(){
 }
 
 goin(){
-    if [[ ! -z $LOG_TRACE ]]; then
+    if [ ! -z $LOG_TRACE ]; then
         local __msg="$1"
         local __params="$2"
         echo "\n [IN]    `date` ___ $__msg [$__params]\n"
@@ -42,7 +42,7 @@ goin(){
 }
 
 goout(){
-    if [[ ! -z $LOG_TRACE ]]; then
+    if [ ! -z $LOG_TRACE ]; then
         local __msg="$1"
         local __outcome="$2"
         echo "\n [OUT]   `date` ___ $__msg [$__outcome]\n"
@@ -55,7 +55,7 @@ stat()
     
     local __aws_url=$1
     local _aws_url_option=""
-    if [[ ! -z "$__aws_url" ]]; then
+    if [ ! -z "$__aws_url" ]; then
         _aws_url_option="--endpoint-url=$__aws_url"
     fi
     
@@ -75,11 +75,11 @@ getTableState()
     local __r=${STATE_MISSING_CODE}
     local __table=$1
     local __s=`aws dynamodb describe-table --output text --table-name ${__table} | grep "^TABLE" | awk '{print $8}'`
-    if [[ ! -z "$__s" ]]; then
-        if [[ "$__s" = ${STATE_DELETING} ]]; then __r=${STATE_DELETING_CODE}; fi
-        if [[ "$__s" = "$STATE_CREATING" ]]; then __r=${STATE_CREATING_CODE}; fi
-        if [[ "$__s" = "$STATE_UPDATING" ]]; then __r=${STATE_UPDATING_CODE}; fi
-        if [[ "$__s" = "$STATE_ACTIVE" ]]; then __r=${STATE_ACTIVE_CODE}; fi
+    if [ ! -z "$__s" ]; then
+        if [ "$__s" = ${STATE_DELETING} ]; then __r=${STATE_DELETING_CODE}; fi
+        if [ "$__s" = "$STATE_CREATING" ]; then __r=${STATE_CREATING_CODE}; fi
+        if [ "$__s" = "$STATE_UPDATING" ]; then __r=${STATE_UPDATING_CODE}; fi
+        if [ "$__s" = "$STATE_ACTIVE" ]; then __r=${STATE_ACTIVE_CODE}; fi
     else
         __s=${STATE_MISSING}
     fi
@@ -94,14 +94,14 @@ checkTableExistence()
     local __table=$1
     
     local __s=0
-    while [[ "$__s" -ne "$STATE_MISSING_CODE" ]] && [[ "$__s" -ne "$STATE_ACTIVE_CODE" ]]
+    while [ "$__s" -ne "$STATE_MISSING_CODE" ] && [ "$__s" -ne "$STATE_ACTIVE_CODE" ]
     do
         getTableState "$__table"
         __s=$?
         sleep 6
     done
 
-    if [[ "$__s" -eq "$STATE_MISSING_CODE" ]]
+    if [ "$__s" -eq "$STATE_MISSING_CODE" ]
     then
         __r=0
     fi
@@ -116,7 +116,7 @@ waitForNoTableState()
     local __table=$1
     
     local __s=0
-    while [[ "$__s" -ne "$STATE_MISSING_CODE" ]]
+    while [ "$__s" -ne "$STATE_MISSING_CODE" ]
     do
         getTableState "$__table"
         __s=$?
@@ -134,12 +134,12 @@ deleteTable()
     checkTableExistence "$__table"
     local __s=$?
     
-    if [[ "$__s" -eq "0" ]]; then
+    if [ "$__s" -eq "0" ]; then
         warn "table $__table is not there"
     else
         aws dynamodb delete-table --table-name $__table    
         __r=$?
-        if [[ "$__r" -eq "0" ]]
+        if [ "$__r" -eq "0" ]
         then 
             waitForNoTableState "$__table"
             info "table $__table not there anymore"
@@ -157,7 +157,7 @@ waitForTableState()
     local __state=$2
     
     local __s=0
-    while [[ ! "$__s" -eq "$__state" ]]
+    while [ ! "$__s" -eq "$__state" ]
     do
         getTableState "$__table"
         __s=$?
@@ -175,7 +175,7 @@ createTable()
 
     checkTableExistence "$__table"
     local __s=$?
-    if [[ ! "$__s" -eq "0" ]]; then
+    if [ ! "$__s" -eq "0" ]; then
         warn "table $__table already there"
         __r=0
     else
@@ -187,7 +187,7 @@ createTable()
         #aws dynamodb create-table --table-name $__table --attribute-definitions AttributeName=id,AttributeType=S AttributeName=n,AttributeType=N --key-schema AttributeName=id,KeyType=HASH AttributeName=n,KeyType=RANGE --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 --local-secondary-indexes IndexName=N KeySchema=AttributeName=n,KeyType=number
         
         __r=$?
-        if [[ "$__r" -eq "0" ]]; then
+        if [ "$__r" -eq "0" ]; then
                 waitForTableState "$__table" "$STATE_ACTIVE_CODE"
                 info "created table $__table"
         else
@@ -207,20 +207,20 @@ createBucket()
     
     local __aws_url=$2
     local _aws_url_option=""
-    if [[ ! -z "$__aws_url" ]]; then
+    if [ ! -z "$__aws_url" ]; then
         _aws_url_option="--endpoint-url=$__aws_url"
     fi
 
     aws $_aws_url_option s3 ls | grep $__bucket
     local __r=$?
-    if [[ "$__r" -eq "0" ]]
+    if [ "$__r" -eq "0" ]
     then
         warn "found bucket $__bucket already created"
         __r=0
     else
         aws $_aws_url_option s3 mb $__bucket
         __r=$?
-        if [[ ! "$__r" -eq "0" ]] ; then warn "could not create bucket $__bucket"; else info "created bucket $__bucket" ; fi
+        if [ ! "$__r" -eq "0" ] ; then warn "could not create bucket $__bucket"; else info "created bucket $__bucket" ; fi
     fi
     goout "createBucket" "$__r"
     return $__r
@@ -234,20 +234,20 @@ createFolderInBucket()
     local __folderName=$2
     local __aws_url=$3
     local _aws_url_option=""
-    if [[ ! -z "$__aws_url" ]]; then
+    if [ ! -z "$__aws_url" ]; then
         _aws_url_option="--endpoint-url=$__aws_url"
     fi
 
     aws $_aws_url_option s3  ls $__bucketName | grep $__folderName
     local __r=$?
-    if [[ "$__r" -eq "0" ]]
+    if [ "$__r" -eq "0" ]
     then
         warn "found $__folderName already created in bucket $__bucketName"
         __r=0
     else
         aws $_aws_url_option s3api put-object --bucket $__bucketName --key $__folderName
         __r=$?
-        if [[ ! "$__r" -eq "0" ]] ; then warn "could not create folder $__folderName in bucket $__bucketName"; else info "created folder $__folderName in bucket $__bucketName" ; fi
+        if [ ! "$__r" -eq "0" ] ; then warn "could not create folder $__folderName in bucket $__bucketName"; else info "created folder $__folderName in bucket $__bucketName" ; fi
     fi
 
     goout "createFolderInBucket" "$__r"
@@ -262,19 +262,19 @@ deleteBucket()
     
     local __aws_url=$2
     local _aws_url_option=""
-    if [[ ! -z "$__aws_url" ]]; then
+    if [ ! -z "$__aws_url" ]; then
         _aws_url_option="--endpoint-url=$__aws_url"
     fi
     
     aws $_aws_url_option s3 ls | grep $__bucketName
     local __r=$?
-    if [[ "$__r" -ne "0" ]]; then
+    if [ "$__r" -ne "0" ]; then
         warn "couldn't find bucket $__bucket, not there"
         __r=0
     else
         aws $_aws_url_option s3 rb $__bucket --force
         __r=$?
-        if [[ ! "$__r" -eq "0" ]] ; then warn "! could not delete bucket $__bucket !"; else info "deleted bucket $__bucket" ; fi
+        if [ ! "$__r" -eq "0" ] ; then warn "! could not delete bucket $__bucket !"; else info "deleted bucket $__bucket" ; fi
     fi
     goout "deleteBucket" $__r
     return $__r
@@ -292,7 +292,7 @@ createPolicyForBucket()
     sed  "s/.*\"Resource\": \[ XXXYYYZZZ \].*/\t\t\"Resource\": \[ $store_buckets_resource \]/" $this_folder/$policy.policy > $this_folder/$policy.json
     aws iam create-policy --policy-name $policy --policy-document file://$this_folder/$policy.json
     local __r=$?
-    if [[ ! "$__r" -eq "0" ]] ; then warn "could not create policy $policy"; else info "created policy $policy" ; fi
+    if [ ! "$__r" -eq "0" ] ; then warn "could not create policy $policy"; else info "created policy $policy" ; fi
     rm $this_folder/${policy}.json
 
     goout "createPolicyForBucket" $__r
@@ -306,7 +306,7 @@ deletePolicy()
     
     __r=0
     arn=`aws iam list-policies --output text | grep ${policy} | awk '{print $2}'`
-    if [[ -z "$arn" ]]
+    if [ -z "$arn" ]
     then 
         warn "could not find policy arn for $policy"
         __r=1
@@ -317,7 +317,7 @@ deletePolicy()
             if [ ! "$?" -eq "0" ] ; then warn "could not delete policy $policy version $v"; else info "deleted policy $policy version $v" ; fi
         done
         aws iam delete-policy --policy-arn $arn
-        if [[ ! "$?" -eq "0" ]] ; then warn "could not delete policy $policy"; else info "deleted policy $policy" ; fi
+        if [ ! "$?" -eq "0" ] ; then warn "could not delete policy $policy"; else info "deleted policy $policy" ; fi
     fi
     goout "deletePolicy" ${__r}
     return $__r
@@ -339,7 +339,7 @@ createPolicyForBucketAndTable()
     
     aws iam create-policy --policy-name $policy --policy-document file://$this_folder/$policy.json
     __r=$? 
-    if [[ ! "$__r" -eq "0" ]] ; then error "could not create policy $policy"; else info "created policy $policy" ; fi
+    if [ ! "$__r" -eq "0" ] ; then error "could not create policy $policy"; else info "created policy $policy" ; fi
     rm $this_folder/${policy}.json
 
     goout "createPolicyForBucketAndTable" $__r
@@ -659,7 +659,7 @@ removePermissionFromFunction()
     
     aws lambda remove-permission --function-name ${__function} --statement-id ${__statement_id}
     __r=$?
-    if [[ ! "$__r" -eq "0" ]] ; then
+    if [ ! "$__r" -eq "0" ] ; then
         warn "could not remove permission from function $__function"
     else 
         info "removed permission from function $__function"
@@ -679,7 +679,7 @@ createPolicy()
     echo "$_spec" > $this_folder/$_name.json
     aws iam create-policy --policy-name $_name --policy-document file://$this_folder/${_name}.json
     local __r=$?
-    if [[ ! "$__r" -eq "0" ]] ; then warn "could not create policy $_name"; else info "created policy $_name" ; fi
+    if [ ! "$__r" -eq "0" ] ; then warn "could not create policy $_name"; else info "created policy $_name" ; fi
     rm $this_folder/${_name}.json
 
     goout "createPolicy" $__r
@@ -700,7 +700,7 @@ buildPolicy()
     local _actions_str=
     for _action in $(echo ${__actions} | tr "," "\n")
     do
-        if [[ -z ${_actions_str} ]]; then
+        if [ -z ${_actions_str} ]; then
             _actions_str="\"$_action\""
         else
             _actions_str="$_actions_str,\"$_action\""
@@ -708,12 +708,12 @@ buildPolicy()
     done
     
     local _resources_str=
-    if [[ -z ${__resources} ]]; then
+    if [ -z ${__resources} ]; then
         _resources_str="\"*\""
     else
         for _resource in $(echo ${__resources} | tr "," "\n")
         do
-            if [[ -z ${_resources_str} ]]; then
+            if [ -z ${_resources_str} ]; then
                 _resources_str="\"$_resource\""
             else
                 _resources_str="$_resources_str,\"$_resource\""
@@ -735,7 +735,7 @@ deleteStack()
     
     aws cloudformation delete-stack --stack-name $__stack
     __r=$?
-    if [[ ! "$__r" -eq "0" ]] ; then
+    if [ ! "$__r" -eq "0" ] ; then
         warn "could not delete stack $__stack"
     else 
         info "deleted stack $__stack"
