@@ -745,14 +745,22 @@ deleteStack()
     return $__r
 }
 
-install_pip()
+install_pip3()
 {
-    goin "install_pip"
+    goin "install_pip3"
     local __r=0
     
-    
-    
-    goout "install_pip" $__r
+    curl -O https://bootstrap.pypa.io/get-pip.py
+    python3 get-pip.py --user
+    __r=$?
+    if [ ! "$__r" -eq "0" ] ; then
+        err "couldn't install pip3"
+    else 
+        #export PATH=~/.local/bin:$PATH
+        info "installed pip3"
+    fi
+    goout "install_pip3" $__r
+    return $__r
 }
 
 aws_init()
@@ -763,7 +771,25 @@ aws_init()
     aws --version
     __r=$?
     if [ ! "$__r" -eq "0" ] ; then
-        info "installing aws-cli"
+        info "installing awscli"
+        pip3 --version
+        __r=$?
+        if [ ! "$__r" -eq "0" ] ; then
+            info "installing pip3"
+            install_pip3
+            __r=$?
+        fi
+        if [ "$__r" -eq "0" ] ; then
+            pip3 install awscli --upgrade --user
+            __r=$?
+            if [ ! "$__r" -eq "0" ] ; then
+                err "couldn't install awscli"
+            else 
+                #_aws=`which aws`
+                #export PATH=$_aws:$PATH
+                info "installed awscli"
+            fi
+        fi
         
     else 
         info "aws-cli is here"
