@@ -767,6 +767,10 @@ aws_init()
 {
     goin "aws_init"
     local __r=0
+    local __region=$1
+    local __output=$2
+    local __key=$3
+    local __key_id=$4
     
     aws --version
     __r=$?
@@ -788,6 +792,7 @@ aws_init()
                 #_aws=`which aws`
                 #export PATH=$_aws:$PATH
                 info "installed awscli"
+                aws_configure $__region $__key $__key_id $__output
             fi
         fi
         
@@ -798,6 +803,29 @@ aws_init()
     goout "aws_init" $__r
     return $__r
 }
+
+aws_configure()
+{
+    goin "aws_configure"
+    local __r=0
+    local __region=$1
+    local __output=$2
+    local __key=$3
+    local __key_id=$4
+    
+    export AWS_ACCESS_KEY_ID=$__key_id
+    export AWS_SECRET_ACCESS_KEY=$__key
+    
+    aws configure --region=$__region --output=$__output
+    __r=$?
+    if [ ! "$__r" -eq "0" ] ; then
+        err "couldn't config aws"
+    fi
+    goout "aws_configure" $__r
+    return $__r
+}
+
+
 
 # result=$(buildPolicy Allow "iam:ChangePassword,s3:ListBucketByTags" "*")
 # echo $result
