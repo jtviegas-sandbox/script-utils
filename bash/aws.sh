@@ -745,6 +745,34 @@ deleteStack()
     return $__r
 }
 
+install_pip()
+{
+    goin "install_pip"
+    local __r=0
+    
+    
+    
+    goout "install_pip" $__r
+}
+
+aws_init()
+{
+    goin "aws_init"
+    local __r=0
+    
+    aws --version
+    __r=$?
+    if [ ! "$__r" -eq "0" ] ; then
+        info "installing aws-cli"
+        
+    else 
+        info "aws-cli is here"
+    fi
+ 
+    goout "aws_init" $__r
+    return $__r
+}
+
 # result=$(buildPolicy Allow "iam:ChangePassword,s3:ListBucketByTags" "*")
 # echo $result
 
