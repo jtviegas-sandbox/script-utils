@@ -769,8 +769,6 @@ aws_init()
     local __r=0
     local __region=$1
     local __output=$2
-    local __key=$3
-    local __key_id=$4
     
     aws --version
     __r=$?
@@ -790,7 +788,9 @@ aws_init()
                 err "couldn't install awscli"
             else 
                 info "installed awscli"
-                aws_configure $__region $__key $__key_id $__output
+                aws configure set region $__region
+                aws configure set output $__output
+                info "configured awscli"
             fi
         fi
         
@@ -799,28 +799,6 @@ aws_init()
     fi
  
     goout "aws_init" $__r
-    return $__r
-}
-
-aws_configure()
-{
-    goin "aws_configure"
-    local __r=0
-    local __region=$1
-    local __output=$2
-    local __key=$3
-    local __key_id=$4
-    
-    local _config="~/.aws/config"
-    if [ ! -e $_config ]; then
-        info "creating $_config as it is missing"
-        mkdir -p ~/.aws && touch ~/.aws/config
-        echo "[default]" > $_config
-        echo "output = $__output" >> $_config
-        echo "region = $__region" >> $_config
-    fi
-
-    goout "aws_configure" $__r
     return $__r
 }
 
