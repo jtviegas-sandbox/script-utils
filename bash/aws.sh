@@ -789,8 +789,6 @@ aws_init()
             if [ ! "$__r" -eq "0" ] ; then
                 err "couldn't install awscli"
             else 
-                #_aws=`which aws`
-                #export PATH=$_aws:$PATH
                 info "installed awscli"
                 aws_configure $__region $__key $__key_id $__output
             fi
@@ -821,13 +819,6 @@ aws_configure()
         echo "output = $__output" >> $_config
         echo "region = $__region" >> $_config
     fi
-    #local _crendentials="~/.aws/credentials"
-    #if [ ! -e $_crendentials ]; then
-    #    info "creating $_crendentials as it is missing"
-    #    echo "[default]" > $_crendentials
-    #    echo "aws_access_key_id = $__key_id" >> $_crendentials
-    #    echo "aws_secret_access_key = $__key" >> $_crendentials
-    #fi
 
     goout "aws_configure" $__r
     return $__r
