@@ -816,17 +816,18 @@ aws_configure()
     local _config="~/.aws/config"
     if [ ! -e $_config ]; then
         info "creating $_config as it is missing"
+        mkdir -p ~/.aws && touch ~/.aws/config
         echo "[default]" > $_config
         echo "output = $__output" >> $_config
         echo "region = $__region" >> $_config
     fi
-    local _crendentials="~/.aws/credentials"
-    if [ ! -e $_crendentials ]; then
-        info "creating $_crendentials as it is missing"
-        echo "[default]" > $_crendentials
-        echo "aws_access_key_id = $__key_id" >> $_crendentials
-        echo "aws_secret_access_key = $__key" >> $_crendentials
-    fi
+    #local _crendentials="~/.aws/credentials"
+    #if [ ! -e $_crendentials ]; then
+    #    info "creating $_crendentials as it is missing"
+    #    echo "[default]" > $_crendentials
+    #    echo "aws_access_key_id = $__key_id" >> $_crendentials
+    #    echo "aws_secret_access_key = $__key" >> $_crendentials
+    #fi
 
     goout "aws_configure" $__r
     return $__r
