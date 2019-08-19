@@ -770,6 +770,8 @@ aws_init()
     local __region=$1
     local __output=$2
     
+    info "!!! be sure the environment is providing with AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY variables !!!"
+    
     aws --version
     __r=$?
     if [ ! "$__r" -eq "0" ] ; then
