@@ -813,14 +813,21 @@ aws_configure()
     local __key=$3
     local __key_id=$4
     
-    export AWS_ACCESS_KEY_ID=$__key_id
-    export AWS_SECRET_ACCESS_KEY=$__key
-    
-    aws configure --region=$__region --output=$__output
-    __r=$?
-    if [ ! "$__r" -eq "0" ] ; then
-        err "couldn't config aws"
+    local _config="~/.aws/config"
+    if [ ! -e $_config ]; then
+        info "creating $_config as it is missing"
+        echo "[default]" > $_config
+        echo "output = $__output" >> $_config
+        echo "region = $__region" >> $_config
     fi
+    local _crendentials="~/.aws/credentials"
+    if [ ! -e $_crendentials ]; then
+        info "creating $_crendentials as it is missing"
+        echo "[default]" > $_crendentials
+        echo "aws_access_key_id = $__key_id" >> $_crendentials
+        echo "aws_secret_access_key = $__key" >> $_crendentials
+    fi
+
     goout "aws_configure" $__r
     return $__r
 }
