@@ -283,16 +283,17 @@ createFolderInBucket()
 
 copyLocalFolderContentsToBucket()
 {
-    goin "copyLocalFolderContentsToBucket" "$1 $2 $3"
+    goin "copyLocalFolderContentsToBucket" "$1 $2 $3 $4"
     local __folder=$1
     local __bucketName=$2
-    local __aws_url=$3
+    local __exclude=$3
+    local __aws_url=$4
     local _aws_url_option=""
     if [ ! -z "$__aws_url" ]; then
         _aws_url_option="--endpoint-url=$__aws_url"
     fi
-
-    aws $_aws_url_option s3 sync $__folder "s3://$__bucketName" --delete
+    
+    aws $_aws_url_option s3 sync $__folder --exclude $__exclude "s3://$__bucketName" --delete
     local __r=$?
     if [ "$__r" -eq "0" ]
     then
