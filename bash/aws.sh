@@ -11,7 +11,7 @@ STATE_CREATING_CODE=3
 STATE_DELETING_CODE=2
 STATE_MISSING_CODE=1
 
-#LOG_TRACE=TRUE
+LOG_TRACE=TRUE
 
 debug(){
     local __msg="$1"
@@ -71,10 +71,20 @@ stat()
 
 getTableState()
 {
-    goin "getTableState" $1
+    goin "getTableState" "$1 $2"
     local __r=${STATE_MISSING_CODE}
     local __table=$1
-    local __s=`aws dynamodb describe-table --output text --table-name ${__table} | grep "^TABLE" | awk '{print $8}'`
+    
+    local __aws_url=$2
+    local _aws_url_option=""
+    local __s=
+    if [ ! -z "$__aws_url" ]; then
+      _aws_url_option="--endpoint-url=$__aws_url"
+      __s=`aws $_aws_url_option dynamodb describe-table --output text --table-name ${__table} | grep "^TABLE" | awk '{print $7}'`
+    else
+      __s=`aws dynamodb describe-table --output text --table-name ${__table} | grep "^TABLE" | awk '{print $8}'`
+    fi
+
     if [ ! -z "$__s" ]; then
         if [ "$__s" = ${STATE_DELETING} ]; then __r=${STATE_DELETING_CODE}; fi
         if [ "$__s" = "$STATE_CREATING" ]; then __r=${STATE_CREATING_CODE}; fi
@@ -89,14 +99,16 @@ getTableState()
 
 checkTableExistence()
 {
-    goin "checkTableExistence" $1
+    goin "checkTableExistence" "$1 $2"
     local __r=1
     local __table=$1
+    
+    local __aws_url=$2
     
     local __s=0
     while [ "$__s" -ne "$STATE_MISSING_CODE" ] && [ "$__s" -ne "$STATE_ACTIVE_CODE" ]
     do
-        getTableState "$__table"
+        getTableState "$__table $__aws_url"
         __s=$?
         sleep 6
     done
@@ -115,10 +127,12 @@ waitForNoTableState()
     goin "waitForNoTableState" $1
     local __table=$1
     
+    local __aws_url=$2
+    
     local __s=0
     while [ "$__s" -ne "$STATE_MISSING_CODE" ]
     do
-        getTableState "$__table"
+        getTableState "$__table $__aws_url"
         __s=$?
         sleep 6
     done
@@ -131,17 +145,23 @@ deleteTable()
     local __r=0
     local __table=$1
     
-    checkTableExistence "$__table"
+    local __aws_url=$2
+    local _aws_url_option=""
+    if [ ! -z "$__aws_url" ]; then
+        _aws_url_option="--endpoint-url=$__aws_url"
+    fi
+    
+    checkTableExistence "$__table $__aws_url"
     local __s=$?
     
     if [ "$__s" -eq "0" ]; then
         warn "table $__table is not there"
     else
-        aws dynamodb delete-table --table-name $__table    
+        aws $_aws_url_option dynamodb delete-table --table-name $__table    
         __r=$?
         if [ "$__r" -eq "0" ]
         then 
-            waitForNoTableState "$__table"
+            waitForNoTableState "$__table $__aws_url"
             info "table $__table not there anymore"
         fi
     fi
@@ -152,14 +172,15 @@ deleteTable()
 
 waitForTableState()
 {
-    goin "waitForTableState" $1
+    goin "waitForTableState" "$1 $2 $3"
     local __table=$1
-    local __state=$2
+    local __state=$2    
+    local __aws_url=$3
     
     local __s=0
     while [ ! "$__s" -eq "$__state" ]
     do
-        getTableState "$__table"
+        getTableState "$__table" "$__aws_url"
         __s=$?
         sleep 6
     done
@@ -169,17 +190,23 @@ waitForTableState()
 
 createTable()
 {
-    goin "createTable" $1
+    goin "createTable" "$1 $2"
     local __r=0
     local __table=$1
+    
+    local __aws_url=$2
+    local _aws_url_option=""
+    if [ ! -z "$__aws_url" ]; then
+        _aws_url_option="--endpoint-url=$__aws_url"
+    fi
 
-    checkTableExistence "$__table"
+    checkTableExistence "$__table" "$__aws_url"
     local __s=$?
     if [ ! "$__s" -eq "0" ]; then
         warn "table $__table already there"
         __r=0
     else
-        aws dynamodb create-table --table-name $__table --attribute-definitions '[{"AttributeName":"id","AttributeType":"N"}]' --key-schema '[{"AttributeName":"id","KeyType":"HASH"}]'  --provisioned-throughput '{"ReadCapacityUnits":5, "WriteCapacityUnits":5}'
+        aws $_aws_url_option dynamodb create-table --table-name $__table --attribute-definitions '[{"AttributeName":"id","AttributeType":"N"}]' --key-schema '[{"AttributeName":"id","KeyType":"HASH"}]'  --provisioned-throughput '{"ReadCapacityUnits":5, "WriteCapacityUnits":5}'
         
         # --global-secondary-indexes '[ { "IndexName": "IDX_NUM", "KeySchema":[ { "AttributeName": "number", "KeyType": "RANGE" } ] , "Projection":{"ProjectionType": "ALL"}, "ProvisionedThroughput":{"ReadCapacityUnits": 5, "WriteCapacityUnits":1} }, { "IndexName": "IDX_NUM", "KeySchema":[ { "AttributeName": "number", "KeyType": "RANGE" } ] , "Projection":{"ProjectionType": "ALL"}, "ProvisionedThroughput":{"ReadCapacityUnits": 5, "WriteCapacityUnits":1} } ]'
             
@@ -188,7 +215,7 @@ createTable()
         
         __r=$?
         if [ "$__r" -eq "0" ]; then
-                waitForTableState "$__table" "$STATE_ACTIVE_CODE"
+                waitForTableState "$__table" "$STATE_ACTIVE_CODE" "$__aws_url"
                 info "created table $__table"
         else
             __r=1
