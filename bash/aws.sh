@@ -293,7 +293,7 @@ copyLocalFolderContentsToBucket()
         _aws_url_option="--endpoint-url=$__aws_url"
     fi
     
-    aws $_aws_url_option s3 sync $__folder --exclude $__exclude "s3://$__bucketName" --delete
+    aws $_aws_url_option s3 sync $__folder "s3://$__bucketName" --delete --exclude $__exclude
     local __r=$?
     if [ "$__r" -eq "0" ]
     then
