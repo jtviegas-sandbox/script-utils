@@ -78,7 +78,7 @@ getTableState()
     local __aws_url=$2
     local __s=
     if [ ! -z "$__aws_url" ]; then
-      __s=`aws dynamodb describe-table --output text --table-name ${__table} --endpoint-url=${__aws_url} | grep "^TABLE" | awk '{print $7}'`
+      __s=`aws dynamodb describe-table --output text --table-name ${__table} --endpoint-url="${__aws_url}" | grep "^TABLE" | awk '{print $7}'`
     else
       __s=`aws dynamodb describe-table --output text --table-name ${__table} | grep "^TABLE" | awk '{print $8}'`
     fi
