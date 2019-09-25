@@ -197,7 +197,7 @@ createTable()
     if [ ! -z "$__aws_url" ]; then
         _aws_url_option="--endpoint-url=$__aws_url"
     fi
-
+    sleep 6
     checkTableExistence "$__table" "$__aws_url"
     local __s=$?
     if [ ! "$__s" -eq "0" ]; then
