@@ -106,7 +106,7 @@ checkTableExistence()
     local __s=0
     while [ "$__s" -ne "$STATE_MISSING_CODE" ] && [ "$__s" -ne "$STATE_ACTIVE_CODE" ]
     do
-        getTableState "$__table $__aws_url"
+        getTableState "$__table" "$__aws_url"
         __s=$?
         sleep 6
     done
