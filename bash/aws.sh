@@ -227,6 +227,32 @@ createBucket()
 {
     goin "createBucket" "$1 $2"
     local __bucketName=$1
+    local __aws_url=$2
+    
+    isBucket "$__bucketName" "$__aws_url"
+    local __r=$?
+    if [ "$__r" -eq "0" ]
+    then
+        warn "found bucket $__bucket already created"
+        __r=0
+    else
+        __bucket="s3://$__bucketName"
+        local _aws_url_option=""
+        if [ ! -z "$__aws_url" ]; then
+            _aws_url_option="--endpoint-url=$__aws_url"
+        fi
+        aws $_aws_url_option s3 mb $__bucket
+        __r=$?
+        if [ ! "$__r" -eq "0" ] ; then warn "could not create bucket $__bucket"; else info "created bucket $__bucket" ; fi
+    fi
+    goout "createBucket" "$__r"
+    return $__r
+}
+
+isBucket()
+{
+    goin "isBucket" "$1 $2"
+    local __bucketName=$1
     
     __bucket="s3://$__bucketName"
     
@@ -238,16 +264,8 @@ createBucket()
 
     aws $_aws_url_option s3 ls | grep $__bucket
     local __r=$?
-    if [ "$__r" -eq "0" ]
-    then
-        warn "found bucket $__bucket already created"
-        __r=0
-    else
-        aws $_aws_url_option s3 mb $__bucket
-        __r=$?
-        if [ ! "$__r" -eq "0" ] ; then warn "could not create bucket $__bucket"; else info "created bucket $__bucket" ; fi
-    fi
-    goout "createBucket" "$__r"
+
+    goout "isBucket" "$__r"
     return $__r
 }
 
