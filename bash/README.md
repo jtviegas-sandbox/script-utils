@@ -11,6 +11,6 @@ How to setup, example:
 * add that link to a bashrc or bash profile user file with a following line: ```source "$SYS/setup.sh"```
 * create a `$SYS/include` file exporting the variables `SYS_SCRIPTS_SRC`, `SYS_SCRIPTS_TARGET`, and any other that you find useful from now on
 
-
+the setup script will load those env vars into the bash session and link those scripts in the user local bin path so that they are easily invoked from the bash prompt.
 
 
