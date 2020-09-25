@@ -33,4 +33,7 @@ then
     eval "$(pyenv init -)"
 fi
 
+# added by me
+export JAVA_HOME=`/usr/libexec/java_home -v 11.0.8`
+
 
